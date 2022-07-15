@@ -1,0 +1,8 @@
+numpy
+pandas
+sklearn
+python-dotenv==0.10.3
+pymongo[srv]==3.10.1
+azure-storage-blob==2.1.0
+flask==2.1.0
+

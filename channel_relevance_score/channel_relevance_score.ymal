@@ -1,0 +1,85 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rs-firstbank-channel-relevance-score-config
+  namespace: default
+  labels:
+    app: rs-firstbank-channel-relevance-score-app
+data:
+  BUSINESS_CLIENT: firstbank
+  MODEL_EMBEDDING_SIZE: "128"
+  MODEL_SPARSE: "True"
+  CLOUD_STORAGE_BUCKET: footprintsforretail-app-mlengine
+  DB_NAME: firstbank
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rs-firstbank-channel-relevance-score-service
+  labels:
+    app: rs-firstbank-channel-relevance-score-app
+spec:
+  type: NodePort
+  selector:
+    app: rs-firstbank-channel-relevance-score-app
+  ports:
+  - port: 80
+    targetPort: 5000
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rs-firstbank-channel-relevance-score-app
+  namespace: default
+  labels:
+    app: rs-firstbank-channel-relevance-score-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rs-firstbank-channel-relevance-score-app
+  template:
+    metadata:
+      labels:
+        app: rs-firstbank-channel-relevance-score-app
+    spec:
+      containers:
+      - name: rs-serving-channel-relevance-score
+        image: footprintsforretailapp.azurecr.io/channel_relevance_score:1.0.1
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 27017
+            protocol: TCP
+        env:
+          - name: DB_URI
+            valueFrom:
+              secretKeyRef:
+                name: mongo-uri-firstbank
+                key: db-uri
+          - name: BUSINESS_CLIENT
+            valueFrom:
+              configMapKeyRef:
+                key: BUSINESS_CLIENT
+                name: rs-firstbank-channel-relevance-score-config
+          - name: MODEL_EMBEDDING_SIZE
+            valueFrom:
+              configMapKeyRef:
+                key: MODEL_EMBEDDING_SIZE
+                name: rs-firstbank-channel-relevance-score-config
+          - name: MODEL_SPARSE
+            valueFrom:
+              configMapKeyRef:
+                key: MODEL_SPARSE
+                name: rs-firstbank-channel-relevance-score-config
+          - name: CLOUD_STORAGE_BUCKET
+            valueFrom:
+              configMapKeyRef:
+                key: CLOUD_STORAGE_BUCKET
+                name: rs-firstbank-channel-relevance-score-config
+          - name: DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                key: DB_NAME
+                name: rs-firstbank-channel-relevance-score-config
